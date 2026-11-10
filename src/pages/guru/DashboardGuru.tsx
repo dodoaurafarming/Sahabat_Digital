@@ -167,7 +167,7 @@ export default function DashboardGuru() {
             </div>
           </div>
 
-          <button onClick={() => navigate('/progres-siswa')} className="w-full h-13 py-3 px-4 rounded-full bg-indigo-500 text-white font-bold text-[17px] shadow-[0_4px_0_#4338ca] active:translate-y-1 active:shadow-none transition-all flex items-center justify-center gap-2">
+          <button onClick={() => navigate('/progres-siswa')} className="w-full py-3 px-4 rounded-full bg-indigo-500 text-white font-bold text-[17px] shadow-[0_4px_0_#4338ca] active:translate-y-1 active:shadow-none transition-all flex items-center justify-center gap-2">
             <span className="material-symbols-outlined text-[20px]">bar_chart</span>
             <span>Lihat Rekap Nilai & Analisis →</span>
           </button>

@@ -1,14 +1,15 @@
 import { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { api, setAuthToken } from '../../lib/api'; // Import API kita
 
 export default function LoginGuru() {
   const navigate = useNavigate();
   const [pin, setPin] = useState(['', '', '', '', '', '']);
   const [isHelpOpen, setIsHelpOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
   const handlePinChange = (index: number, value: string) => {
-    // Hanya angka
     const numericValue = value.replace(/[^0-9]/g, '');
     if (!numericValue) return;
 
@@ -16,7 +17,6 @@ export default function LoginGuru() {
     newPin[index] = numericValue.substring(numericValue.length - 1);
     setPin(newPin);
 
-    // Auto focus ke kotak berikutnya
     if (index < 5) {
       inputRefs.current[index + 1]?.focus();
     }
@@ -24,15 +24,36 @@ export default function LoginGuru() {
 
   const handleKeyDown = (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Backspace' && !pin[index] && index > 0) {
-      // Jika kotak kosong dan backspace, mundur ke kotak sebelumnya
       inputRefs.current[index - 1]?.focus();
     }
   };
 
-  const handleLogin = () => {
-    // Di sini nantinya bisa ditambahkan validasi PIN ke backend
-    // Untuk sekarang, langsung arahkan ke dashboard guru
-    navigate('/dashboard-guru');
+  const handleLogin = async () => {
+    if (isLoading) return;
+    setIsLoading(true);
+
+    // Gabungkan 6 digit PIN menjadi string
+    const nip = pin.join(''); 
+
+    try {
+      // Tembak API Login Guru (Di backend kita, NIP adalah 6 digit PIN yang dimasukkan)
+      const response = await api.post('/auth/login-guru', {
+        nip: nip,
+        password: 'passwordguru123' // <--- SEMENTARA KITA HARDCODE PASSWORD
+        // Catatan: Di aplikasi nyata, guru harus memasukkan password juga. 
+        // Tapi untuk demo cepat, kita asumsikan semua guru pakai password default ini.
+      });
+
+      setAuthToken(response.data.token);
+      navigate('/dashboard-guru');
+
+    } catch (error: any) {
+      setIsLoading(false);
+      alert(error.response?.data?.message || 'NIP tidak ditemukan atau salah');
+      // Reset PIN jika gagal
+      setPin(['', '', '', '', '', '']);
+      inputRefs.current[0]?.focus();
+    }
   };
 
   const isPinComplete = pin.every((digit) => digit !== '');
@@ -111,7 +132,7 @@ export default function LoginGuru() {
           {/* Submit Button */}
           <button 
             onClick={handleLogin}
-            disabled={!isPinComplete}
+            disabled={!isPinComplete || isLoading}
             className={`w-full min-h-[52px] rounded-2xl font-bold text-[17px] flex items-center justify-center gap-2 transition-all duration-200
               ${isPinComplete 
                 ? 'bg-primary text-white shadow-md hover:bg-blue-700 active:scale-[0.98]' 
@@ -119,8 +140,14 @@ export default function LoginGuru() {
               }
             `}
           >
-            <span>Masuk</span>
-            <span className="material-symbols-outlined text-[20px] icon-filled">vpn_key</span>
+            {isLoading ? (
+              <span className="material-symbols-outlined animate-spin text-[20px]">progress_activity</span>
+            ) : (
+              <>
+                <span>Masuk</span>
+                <span className="material-symbols-outlined text-[20px] icon-filled">vpn_key</span>
+              </>
+            )}
           </button>
 
           {/* Help Action */}

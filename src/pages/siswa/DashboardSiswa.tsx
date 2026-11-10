@@ -4,6 +4,10 @@ import BottomNav from '../../components/layout/BottomNav';
 export default function DashboardSiswa() {
   const navigate = useNavigate();
 
+  // Catatan untuk Demo: 
+  // Data di bawah ini sengaja di-hardcode agar tampilan tetap cantik saat demo.
+  // Nanti, Anda bisa menggantinya dengan data dari API (useEffect + useState).
+
   return (
     <div className="min-h-screen bg-surface-container-low flex flex-col pb-28">
       {/* Header */}

@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { api, setAuthToken } from '../../lib/api'; // Import API kita
 
 export default function LoginSiswa() {
   const navigate = useNavigate();
@@ -7,23 +8,35 @@ export default function LoginSiswa() {
   const [isLoading, setIsLoading] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [name, setName] = useState('');
+  const [kelas, setKelas] = useState(''); // Tambahkan state untuk kelas
+  const [password, setPassword] = useState(''); // State untuk password
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name) return;
+    if (!name || !kelas) return;
     
     setIsLoading(true);
     
-    // Simulasi proses login
-    setTimeout(() => {
-      setIsLoading(false);
+    try {
+      // Memanggil API Backend
+      const response = await api.post('/auth/login-siswa', {
+        name: name,
+        kelas: kelas
+      });
+
+      // Simpan token JWT ke browser
+      setAuthToken(response.data.token);
+      
       setIsSuccess(true);
       
-      // Berpindah ke Dashboard setelah animasi sukses selesai
+      // Pindah ke Dashboard setelah animasi
       setTimeout(() => {
         navigate('/dashboard-siswa');
       }, 1000);
-    }, 1500);
+    } catch (error: any) {
+      setIsLoading(false);
+      alert(error.response?.data?.message || 'Terjadi kesalahan saat login');
+    }
   };
 
   return (
@@ -47,25 +60,18 @@ export default function LoginSiswa() {
           
           {/* Mascot Section */}
           <div className="flex flex-col items-center mb-6 relative mt-4">
-            {/* Efek Glow di belakang */}
             <div className="absolute -top-3 w-44 h-44 rounded-full bg-primary/20 blur-xl"></div>
             
-            {/* Wadah Relatif untuk Foto dan Badge */}
             <div className="relative">
-              
-              {/* Foto / Ikon */}
               <div className="w-40 h-40 rounded-full bg-white p-2 shadow-lg flex items-center justify-center overflow-hidden">
                 <div className="w-full h-full rounded-full bg-blue-100 flex items-center justify-center">
                    <span className="material-symbols-outlined text-6xl text-blue-400">face</span>
                 </div>
               </div>
-
-              {/* Badge Kuning Timbul */}
               <div className="absolute bottom-1 -right-2 bg-yellow-300 text-yellow-900 rounded-full px-2 py-0.5 shadow-md flex items-center gap-0.5 animate-bounce z-10">
                 <span className="material-symbols-outlined text-[16px]">waving_hand</span>
                 <span className="font-bold text-[11px]">Hai!</span>
               </div>
-
             </div>
 
             <div className="text-center mt-5">
@@ -105,9 +111,11 @@ export default function LoginSiswa() {
                 <div className="relative">
                   <select 
                     required
+                    value={kelas}
+                    onChange={(e) => setKelas(e.target.value)}
                     className="w-full h-[52px] bg-surface-container-low text-gray-800 font-medium px-4 rounded-xl appearance-none shadow-inner focus:outline-none focus:ring-4 focus:ring-blue-100 transition-all cursor-pointer pr-12"
                   >
-                    <option value="" disabled defaultValue="">Pilih kelasmu sekarang...</option>
+                    <option value="" disabled>Pilih kelasmu sekarang...</option>
                     <option value="1">🎒 Kelas 1 SD</option>
                     <option value="2">✏️ Kelas 2 SD</option>
                     <option value="3">📚 Kelas 3 SD</option>
@@ -119,25 +127,20 @@ export default function LoginSiswa() {
                     <span className="material-symbols-outlined text-[24px]">arrow_drop_down_circle</span>
                   </div>
                 </div>
-                <div className="flex items-start gap-1.5 ml-1 mt-0.5">
-                  <span className="material-symbols-outlined text-primary text-[15px] shrink-0 mt-0.5">info</span>
-                  <p className="text-[13px] font-semibold text-gray-500 leading-tight">
-                    Pilihan kelas penting untuk menyesuaikan ruang curhat & kuis belajarmu.
-                  </p>
-                </div>
               </div>
 
-              {/* Password Input */}
+              {/* Password Input (Opsional, backend kita belum validasi password siswa) */}
               <div className="flex flex-col gap-1.5">
                 <label className="flex items-center gap-1.5 font-bold text-[14px] text-gray-600 ml-1">
                   <span className="material-symbols-outlined text-primary text-[20px] icon-filled">lock</span>
-                  Kata Sandi
+                  Kata Sandi (Opsional)
                 </label>
                 <div className="relative w-full flex items-center">
                   <input 
                     type={showPassword ? "text" : "password"} 
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
                     placeholder="Masukkan kata sandi rahasiamu" 
-                    required
                     className="w-full h-[52px] bg-surface-container-low text-gray-800 placeholder:text-gray-400 font-medium pl-4 pr-12 rounded-xl shadow-inner focus:outline-none focus:ring-4 focus:ring-blue-100 transition-all"
                   />
                   <button 
@@ -171,7 +174,7 @@ export default function LoginSiswa() {
                     </>
                   ) : isSuccess ? (
                     <>
-                      <span>Selamat Datang, {name}!</span>
+                      <span>Selamat Datang!</span>
                       <span className="material-symbols-outlined text-[24px]">celebration</span>
                     </>
                   ) : (

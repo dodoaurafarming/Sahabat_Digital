@@ -171,7 +171,7 @@ export default function ProfilGuru() {
         <div className="flex flex-col gap-2 mt-2">
           <button 
             onClick={() => { if(confirm('Keluar dari aplikasi?')) navigate('/login-guru') }}
-            className="w-full h-13 py-3 px-4 rounded-xl bg-red-50 text-red-600 hover:bg-red-100 font-bold text-[17px] flex items-center justify-center gap-2 active:scale-95 transition-all"
+            className="w-full py-3 px-4 rounded-xl bg-red-50 text-red-600 hover:bg-red-100 font-bold text-[17px] flex items-center justify-center gap-2 active:scale-95 transition-all"
           >
             <span className="material-symbols-outlined text-[22px]">logout</span>
             <span>Keluar dari Aplikasi</span>

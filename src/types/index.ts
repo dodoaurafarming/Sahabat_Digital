@@ -1,10 +1,13 @@
 export type UserRole = 'siswa' | 'guru' | 'admin';
 
 export interface User {
-  id: string;
+  id: number; // Backend menggunakan integer auto-increment
   name: string;
   role: UserRole;
-  kelas?: number; // 1-6 untuk siswa
+  kelas?: string; // Backend menyimpan kelas sebagai string (contoh: "5A")
+  nip?: string; // Khusus untuk guru
+  xp?: number; // Poin gamifikasi
+  streak?: number; // Hari beruntun
   avatarUrl?: string;
 }
 

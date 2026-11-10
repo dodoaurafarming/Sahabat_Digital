@@ -29,7 +29,6 @@ export default function Welcome() {
           <div className="relative group cursor-pointer transition-transform duration-300 hover:scale-[1.02] active:scale-95">
             <div className="absolute inset-0 bg-primary/15 rounded-full blur-xl transform scale-110"></div>
             <div className="relative w-44 h-44 rounded-full bg-white flex items-center justify-center p-4 shadow-[0_12px_30px_-6px_rgba(30,58,138,0.12)]">
-              {/* Ganti src ini dengan logo asli Anda nanti */}
               <div className="w-full h-full rounded-full bg-blue-100 flex items-center justify-center text-blue-500">
                 <span className="material-symbols-outlined text-6xl">child_care</span>
               </div>
@@ -58,7 +57,7 @@ export default function Welcome() {
         </div>
       </main>
 
-      {/* Modal Bottom Sheet (Desain Kedua) */}
+      {/* Modal Bottom Sheet */}
       <div 
         className={`fixed inset-0 bg-[#1E3A8A]/45 backdrop-blur-sm z-50 flex flex-col justify-end items-center transition-opacity duration-200 p-4 ${isModalOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}
         onClick={(e) => { if (e.target === e.currentTarget) setIsModalOpen(false) }}

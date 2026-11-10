@@ -1,7 +1,7 @@
-import React from 'react';
+import type { ButtonHTMLAttributes } from 'react'; // <-- Tambahkan 'type'
 import { cn } from '../../lib/utils';
 
-interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: 'primary' | 'secondary';
   icon?: string;
 }

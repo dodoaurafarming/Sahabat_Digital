@@ -1,7 +1,6 @@
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 
 export default function BottomNavGuru() {
-  const navigate = useNavigate();
   const location = useLocation();
 
   const navItems = [
@@ -16,9 +15,9 @@ export default function BottomNavGuru() {
         {navItems.map((item) => {
           const isActive = location.pathname === item.path;
           return (
-            <button
+            <a
               key={item.id}
-              onClick={() => navigate(item.path)}
+              href={item.path}
               className={`flex flex-col items-center justify-center gap-1 min-w-[72px] h-14 px-3 rounded-full transition-all ${
                 isActive
                   ? 'text-primary font-bold bg-blue-50'
@@ -29,7 +28,7 @@ export default function BottomNavGuru() {
                 {item.icon}
               </span>
               <span className="text-[13px] font-semibold">{item.label}</span>
-            </button>
+            </a>
           );
         })}
       </div>
