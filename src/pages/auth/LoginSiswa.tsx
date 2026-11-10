@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { api, setAuthToken } from '../../lib/api'; // Import API kita
 
 export default function LoginSiswa() {
   const navigate = useNavigate();
@@ -8,46 +7,39 @@ export default function LoginSiswa() {
   const [isLoading, setIsLoading] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [name, setName] = useState('');
-  const [kelas, setKelas] = useState(''); // Tambahkan state untuk kelas
-  const [password, setPassword] = useState(''); // State untuk password
+  const [kelas, setKelas] = useState('');
+  const [password, setPassword] = useState('');
 
-  const handleLogin = async (e: React.FormEvent) => {
+  const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name || !kelas) return;
+    if (!name || !kelas) {
+      alert("Nama dan Kelas wajib diisi!");
+      return;
+    }
     
     setIsLoading(true);
     
-    try {
-      // Memanggil API Backend
-      const response = await api.post('/auth/login-siswa', {
-        name: name,
-        kelas: kelas
-      });
-
-      // Simpan token JWT ke browser
-      setAuthToken(response.data.token);
-      
+    // SIMULASI LOGIN (Tanpa Backend)
+    setTimeout(() => {
+      setIsLoading(false);
       setIsSuccess(true);
       
-      // Pindah ke Dashboard setelah animasi
+      // Simpan token dummy ke local storage
+      localStorage.setItem('token', 'dummy-token-siswa');
+      localStorage.setItem('user_name', name);
+      localStorage.setItem('user_kelas', kelas);
+      
       setTimeout(() => {
         navigate('/dashboard-siswa');
       }, 1000);
-    } catch (error: any) {
-      setIsLoading(false);
-      alert(error.response?.data?.message || 'Terjadi kesalahan saat login');
-    }
+    }, 1500);
   };
 
   return (
     <div className="min-h-screen bg-surface-container-low flex flex-col">
-      {/* Header */}
       <header className="fixed top-0 w-full z-50 bg-surface-container-low/90 backdrop-blur-xl shadow-sm">
         <div className="h-16 px-4 flex items-center justify-between max-w-md mx-auto w-full">
-          <button 
-            onClick={() => navigate('/')} 
-            className="w-11 h-11 rounded-full bg-white text-primary flex items-center justify-center shadow-sm active:scale-95 transition-all"
-          >
+          <button onClick={() => navigate('/')} className="w-11 h-11 rounded-full bg-white text-primary flex items-center justify-center shadow-sm active:scale-95 transition-all">
             <span className="material-symbols-outlined text-[24px]">arrow_back</span>
           </button>
           <div className="flex-1 text-center font-bold text-gray-800 text-[18px]">Student Login</div>
@@ -58,10 +50,8 @@ export default function LoginSiswa() {
       <main className="flex-1 flex flex-col relative w-full pt-16 pb-8">
         <div className="w-full max-w-md mx-auto px-4 flex flex-col items-center">
           
-          {/* Mascot Section */}
           <div className="flex flex-col items-center mb-6 relative mt-4">
             <div className="absolute -top-3 w-44 h-44 rounded-full bg-primary/20 blur-xl"></div>
-            
             <div className="relative">
               <div className="w-40 h-40 rounded-full bg-white p-2 shadow-lg flex items-center justify-center overflow-hidden">
                 <div className="w-full h-full rounded-full bg-blue-100 flex items-center justify-center">
@@ -73,7 +63,6 @@ export default function LoginSiswa() {
                 <span className="font-bold text-[11px]">Hai!</span>
               </div>
             </div>
-
             <div className="text-center mt-5">
               <h1 className="text-[24px] font-extrabold text-primary tracking-tight">Halo, Teman Baik!</h1>
               <p className="text-[16px] text-gray-500 mt-1 max-w-[280px] mx-auto leading-snug">
@@ -82,39 +71,28 @@ export default function LoginSiswa() {
             </div>
           </div>
 
-          {/* Form Card */}
           <div className="w-full bg-white rounded-3xl p-6 shadow-xl mb-6">
             <form onSubmit={handleLogin} className="flex flex-col gap-5">
               
-              {/* Name Input */}
               <div className="flex flex-col gap-1.5">
                 <label className="flex items-center gap-1.5 font-bold text-[14px] text-gray-600 ml-1">
                   <span className="material-symbols-outlined text-primary text-[20px] icon-filled">sentiment_very_satisfied</span>
                   Nama Panggilan
                 </label>
                 <input 
-                  type="text" 
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  placeholder="Ketik nama panggilanmu di sini..." 
-                  required
+                  type="text" value={name} onChange={(e) => setName(e.target.value)}
+                  placeholder="Ketik nama panggilanmu di sini..." required
                   className="w-full h-[52px] bg-surface-container-low text-gray-800 placeholder:text-gray-400 font-medium px-4 rounded-xl shadow-inner focus:outline-none focus:ring-4 focus:ring-blue-100 transition-all"
                 />
               </div>
 
-              {/* Grade Select */}
               <div className="flex flex-col gap-1.5">
                 <label className="flex items-center gap-1.5 font-bold text-[14px] text-gray-600 ml-1">
                   <span className="material-symbols-outlined text-primary text-[20px] icon-filled">school</span>
                   Kelas
                 </label>
                 <div className="relative">
-                  <select 
-                    required
-                    value={kelas}
-                    onChange={(e) => setKelas(e.target.value)}
-                    className="w-full h-[52px] bg-surface-container-low text-gray-800 font-medium px-4 rounded-xl appearance-none shadow-inner focus:outline-none focus:ring-4 focus:ring-blue-100 transition-all cursor-pointer pr-12"
-                  >
+                  <select required value={kelas} onChange={(e) => setKelas(e.target.value)} className="w-full h-[52px] bg-surface-container-low text-gray-800 font-medium px-4 rounded-xl appearance-none shadow-inner focus:outline-none focus:ring-4 focus:ring-blue-100 transition-all cursor-pointer pr-12">
                     <option value="" disabled>Pilih kelasmu sekarang...</option>
                     <option value="1">🎒 Kelas 1 SD</option>
                     <option value="2">✏️ Kelas 2 SD</option>
@@ -129,72 +107,36 @@ export default function LoginSiswa() {
                 </div>
               </div>
 
-              {/* Password Input (Opsional, backend kita belum validasi password siswa) */}
               <div className="flex flex-col gap-1.5">
                 <label className="flex items-center gap-1.5 font-bold text-[14px] text-gray-600 ml-1">
                   <span className="material-symbols-outlined text-primary text-[20px] icon-filled">lock</span>
                   Kata Sandi (Opsional)
                 </label>
                 <div className="relative w-full flex items-center">
-                  <input 
-                    type={showPassword ? "text" : "password"} 
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
+                  <input type={showPassword ? "text" : "password"} value={password} onChange={(e) => setPassword(e.target.value)}
                     placeholder="Masukkan kata sandi rahasiamu" 
                     className="w-full h-[52px] bg-surface-container-low text-gray-800 placeholder:text-gray-400 font-medium pl-4 pr-12 rounded-xl shadow-inner focus:outline-none focus:ring-4 focus:ring-blue-100 transition-all"
                   />
-                  <button 
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-2 w-10 h-10 flex items-center justify-center text-gray-400 hover:text-primary transition-colors rounded-full"
-                  >
-                    <span className="material-symbols-outlined text-[22px]">
-                      {showPassword ? 'visibility_off' : 'visibility'}
-                    </span>
+                  <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-2 w-10 h-10 flex items-center justify-center text-gray-400 hover:text-primary transition-colors rounded-full">
+                    <span className="material-symbols-outlined text-[22px]">{showPassword ? 'visibility_off' : 'visibility'}</span>
                   </button>
                 </div>
               </div>
 
-              {/* Submit Button */}
               <div className="pt-2">
-                <button 
-                  type="submit" 
-                  disabled={isLoading || isSuccess}
-                  className={`w-full h-14 font-bold text-[17px] rounded-xl flex items-center justify-center gap-2 transition-all duration-300
-                    ${isSuccess 
-                      ? 'bg-green-500 text-white shadow-[0_5px_0_#059669]' 
-                      : 'bg-primary text-white shadow-[0_5px_0_#004395,0_12px_20px_rgba(0,88,190,0.3)] active:translate-y-1 active:shadow-[0_1px_0_#004395]'
-                    }
-                  `}
-                >
-                  {isLoading ? (
-                    <>
-                      <span className="material-symbols-outlined animate-spin text-[22px]">progress_activity</span>
-                      <span>Membuka Gerbang...</span>
-                    </>
-                  ) : isSuccess ? (
-                    <>
-                      <span>Selamat Datang!</span>
-                      <span className="material-symbols-outlined text-[24px]">celebration</span>
-                    </>
-                  ) : (
-                    <>
-                      <span>Masuk</span>
-                      <span className="material-symbols-outlined text-[24px]">rocket_launch</span>
-                    </>
-                  )}
+                <button type="submit" disabled={isLoading || isSuccess} className={`w-full h-14 font-bold text-[17px] rounded-xl flex items-center justify-center gap-2 transition-all duration-300 ${isSuccess ? 'bg-green-500 text-white shadow-[0_5px_0_#059669]' : 'bg-primary text-white shadow-[0_5px_0_#004395,0_12px_20px_rgba(0,88,190,0.3)] active:translate-y-1 active:shadow-[0_1px_0_#004395]'}`}>
+                  {isLoading ? (<><span className="material-symbols-outlined animate-spin text-[22px]">progress_activity</span><span>Membuka Gerbang...</span></>) 
+                  : isSuccess ? (<><span>Selamat Datang!</span><span className="material-symbols-outlined text-[24px]">celebration</span></>) 
+                  : (<><span>Masuk</span><span className="material-symbols-outlined text-[24px]">rocket_launch</span></>)}
                 </button>
               </div>
-
             </form>
           </div>
 
-          {/* Footer Info */}
           <div className="w-full flex items-center justify-center gap-2 p-3 rounded-full bg-blue-50 text-center">
             <span className="material-symbols-outlined text-primary text-[20px] icon-filled">verified_user</span>
             <span className="text-[13px] font-semibold text-blue-900">Ruang aman & bersahabat untuk seluruh murid SD</span>
           </div>
-
         </div>
       </main>
     </div>

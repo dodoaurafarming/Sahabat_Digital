@@ -3,10 +3,9 @@ import BottomNav from '../../components/layout/BottomNav';
 
 export default function DashboardSiswa() {
   const navigate = useNavigate();
-
-  // Catatan untuk Demo: 
-  // Data di bawah ini sengaja di-hardcode agar tampilan tetap cantik saat demo.
-  // Nanti, Anda bisa menggantinya dengan data dari API (useEffect + useState).
+  
+  // Ambil nama dari local storage (jika ada)
+  const userName = localStorage.getItem('user_name') || 'Siswa Hebat';
 
   return (
     <div className="min-h-screen bg-surface-container-low flex flex-col pb-28">
@@ -47,7 +46,7 @@ export default function DashboardSiswa() {
             </div>
             <div className="flex flex-col min-w-0">
               <div className="flex items-center gap-1.5 flex-wrap">
-                <span className="text-[20px] font-extrabold text-gray-800 truncate">Halo, Budi!</span>
+                <span className="text-[20px] font-extrabold text-gray-800 truncate">Halo, {userName}!</span>
                 <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-blue-100 text-blue-800 text-[13px] font-bold">SD Bintang 01</span>
               </div>
               <p className="text-[16px] text-gray-500 truncate">Siap jadi pahlawan kebaikan hari ini? 🌟</p>
@@ -72,9 +71,7 @@ export default function DashboardSiswa() {
                 <span className="text-[13px] font-semibold text-gray-500">50 Poin lagi menuju Level 4</span>
               </div>
             </div>
-            <span className="inline-flex items-center px-2.5 py-1 rounded-full bg-yellow-100 text-yellow-900 font-bold text-[14px]">
-              Hebat!
-            </span>
+            <span className="inline-flex items-center px-2.5 py-1 rounded-full bg-yellow-100 text-yellow-900 font-bold text-[14px]">Hebat!</span>
           </div>
           
           <div className="w-full bg-gray-100 h-3.5 rounded-full overflow-hidden p-0.5">
@@ -105,11 +102,7 @@ export default function DashboardSiswa() {
 
         {/* Feature Grid */}
         <div className="grid grid-cols-2 gap-3">
-          {/* Materi */}
-          <button 
-            onClick={() => navigate('/materi')}
-            className="group flex flex-col items-start text-left bg-white rounded-2xl p-4 shadow-[0_4px_0_#e6eefb] active:translate-y-1 transition-all"
-          >
+          <button onClick={() => navigate('/materi')} className="group flex flex-col items-start text-left bg-white rounded-2xl p-4 shadow-[0_4px_0_#e6eefb] active:translate-y-1 transition-all">
             <div className="w-full flex items-center justify-between mb-3">
               <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center text-primary group-hover:scale-105 transition-transform">
                 <span className="material-symbols-outlined text-[28px] icon-filled">menu_book</span>
@@ -120,11 +113,7 @@ export default function DashboardSiswa() {
             <p className="text-[13px] font-semibold text-gray-500 line-clamp-2">Cerita bergambar & video ceria anti-bullying.</p>
           </button>
 
-          {/* Kuis */}
-          <button 
-            onClick={() => navigate('/latihan')}
-            className="group flex flex-col items-start text-left bg-white rounded-2xl p-4 shadow-[0_4px_0_#ffdf9e] active:translate-y-1 transition-all"
-          >
+          <button onClick={() => navigate('/latihan')} className="group flex flex-col items-start text-left bg-white rounded-2xl p-4 shadow-[0_4px_0_#ffdf9e] active:translate-y-1 transition-all">
             <div className="w-full flex items-center justify-between mb-3">
               <div className="w-12 h-12 rounded-full bg-yellow-100 flex items-center justify-center text-yellow-600 group-hover:scale-105 transition-transform">
                 <span className="material-symbols-outlined text-[28px] icon-filled">emoji_events</span>
@@ -135,11 +124,7 @@ export default function DashboardSiswa() {
             <p className="text-[13px] font-semibold text-gray-500 line-clamp-2">Asah pemahamanmu & raih bintang emas!</p>
           </button>
 
-          {/* Curhat (Full Width) */}
-          <button 
-            onClick={() => navigate('/curhat-siswa')}
-            className="col-span-2 group flex flex-col items-start text-left bg-white rounded-2xl p-4 shadow-[0_4px_0_#ffdad6] active:translate-y-1 transition-all"
-          >
+          <button onClick={() => navigate('/curhat-siswa')} className="col-span-2 group flex flex-col items-start text-left bg-white rounded-2xl p-4 shadow-[0_4px_0_#ffdad6] active:translate-y-1 transition-all">
             <div className="w-full flex items-center justify-between mb-3">
               <div className="flex items-center gap-3">
                 <div className="relative w-12 h-12 rounded-full bg-red-50 flex items-center justify-center text-red-500 group-hover:scale-105 transition-transform">
@@ -172,32 +157,12 @@ export default function DashboardSiswa() {
             </div>
             <div className="flex flex-col">
               <span className="font-bold text-[14px] text-primary">Kebaikan Hari Ini</span>
-              <p className="text-[16px] text-gray-800 leading-snug">
-                Tahukah kamu? Kata-kata manismu bisa bikin teman tersenyum sepanjang hari! ✨
-              </p>
+              <p className="text-[16px] text-gray-800 leading-snug">Tahukah kamu? Kata-kata manismu bisa bikin teman tersenyum sepanjang hari! ✨</p>
             </div>
           </div>
         </div>
-
-        {/* Mascot Mini Card */}
-        <div className="flex items-center justify-between bg-white rounded-2xl p-4 shadow-sm">
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-full bg-blue-50 flex items-center justify-center">
-               <span className="material-symbols-outlined text-blue-400 text-3xl">smart_toy</span>
-            </div>
-            <div>
-              <span className="font-bold text-[14px] text-gray-800 block">Misi Harian</span>
-              <span className="text-[13px] font-semibold text-gray-500">Tonton 1 Cerita Kebaikan (+20 Poin)</span>
-            </div>
-          </div>
-          <button className="px-5 py-2 bg-primary text-white font-bold text-[17px] rounded-full shadow-[0_3px_0_#004395] hover:bg-blue-700 active:translate-y-1 active:shadow-none transition-all">
-            Mulai
-          </button>
-        </div>
-
       </main>
 
-      {/* Bottom Navigation */}
       <BottomNav />
     </div>
   );

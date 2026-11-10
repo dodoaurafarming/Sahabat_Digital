@@ -1,9 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import BottomNav from '../../components/layout/BottomNav';
-import { api } from '../../lib/api';
 
-// Tipe data untuk pesan
 interface Message {
   id: number;
   senderId: number;
@@ -14,51 +12,30 @@ interface Message {
 export default function CurhatSiswa() {
   const navigate = useNavigate();
   const [message, setMessage] = useState('');
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const chatRoomId = 1; // Hardcode untuk demo
+  
+  // Data dummy percakapan awal
+  const [messages, setMessages] = useState<Message[]>([
+    { id: 1, senderId: 2, content: 'Halo Budi! Ada apa hari ini? Kalau ada teman yang mengejek atau berbuat jahat kepadamu, jangan takut cerita ke Ibu ya.', createdAt: new Date(Date.now() - 3600000).toISOString() },
+    { id: 2, senderId: 1, content: 'Halo Bu Rahma... Kemarin di grup WA kelas ada teman yang bikin stiker foto saya lalu diejek ramai-ramai. Saya sedih dan takut besok masuk sekolah 😢', createdAt: new Date(Date.now() - 1800000).toISOString() }
+  ]);
 
-  // Ambil riwayat chat saat halaman dimuat
-  useEffect(() => {
-    const fetchMessages = async () => {
-      try {
-        const response = await api.get(`/chat/messages/${chatRoomId}`);
-        setMessages(response.data.data);
-      } catch (error) {
-        console.error("Gagal mengambil pesan", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    fetchMessages();
-  }, []);
-
-  // Fungsi kirim pesan ke backend
-  const handleSend = async (e: React.FormEvent) => {
+  const handleSend = (e: React.FormEvent) => {
     e.preventDefault();
     if (!message.trim()) return;
 
-    const textToSend = message;
-    setMessage(''); // Kosongkan input langsung
+    const newMessage: Message = {
+      id: Date.now(),
+      senderId: 1, // ID Siswa (Budi)
+      content: message,
+      createdAt: new Date().toISOString()
+    };
 
-    try {
-      // Kirim ke API
-      const response = await api.post('/chat/message', {
-        chatRoomId,
-        content: textToSend
-      });
-
-      // Tambahkan pesan baru ke layar tanpa perlu refresh
-      setMessages(prev => [...prev, response.data.data]);
-    } catch (error) {
-      alert('Gagal mengirim pesan. Pastikan backend menyala.');
-    }
+    setMessages(prev => [...prev, newMessage]);
+    setMessage('');
   };
 
   return (
     <div className="min-h-screen bg-surface-container-low flex flex-col pb-36">
-      
-      {/* Header */}
       <header className="fixed top-0 w-full z-50 bg-white/85 backdrop-blur-xl shadow-sm">
         <div className="h-16 px-4 flex items-center justify-between gap-2 max-w-md mx-auto w-full">
           <div className="flex items-center gap-2">
@@ -87,10 +64,7 @@ export default function CurhatSiswa() {
         </div>
       </header>
 
-      {/* Main Content */}
       <main className="flex-1 w-full max-w-md mx-auto px-4 pt-20 flex flex-col gap-3">
-        
-        {/* Privacy Notice */}
         <div className="flex items-center justify-between bg-blue-50 px-4 py-2.5 rounded-2xl shadow-sm">
           <div className="flex items-center gap-2">
             <div className="w-7 h-7 rounded-full bg-primary flex items-center justify-center text-white shadow-sm">
@@ -98,54 +72,43 @@ export default function CurhatSiswa() {
             </div>
             <div className="flex flex-col">
               <span className="text-[14px] font-bold text-blue-900 leading-tight">Percakapan 100% Rahasia & Aman</span>
-              <span className="text-[13px] font-semibold text-blue-700 leading-tight">Terenkripsi ujung-ke-ujung</span>
+              <span className="text-[13px] font-semibold text-blue-700 leading-tight">Hanya kamu dan Ibu Rahma yang dapat membaca</span>
             </div>
           </div>
         </div>
 
-        {/* Chat Feed */}
         <div className="flex flex-col gap-4 mt-2">
-          
           <div className="flex items-center justify-center my-1">
             <span className="px-3.5 py-1 bg-gray-200/80 rounded-full text-[13px] font-bold text-gray-500 shadow-sm">Hari Ini</span>
           </div>
 
-          {isLoading ? (
-            <div className="text-center text-gray-500">Memuat pesan...</div>
-          ) : (
-            messages.map((msg) => {
-              // Asumsi ID Siswa yang login adalah 1
-              const isSiswa = msg.senderId === 1; 
-              return (
-                <div key={msg.id} className={`flex items-end gap-2 max-w-[88%] ${isSiswa ? 'ml-auto justify-end mt-2' : 'mr-auto'}`}>
-                  {!isSiswa && (
-                    <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-primary shrink-0 shadow-sm">
-                      <span className="material-symbols-outlined text-[18px]">school</span>
-                    </div>
-                  )}
-                  
-                  <div className={`flex flex-col gap-1 ${isSiswa ? 'items-end' : 'items-start'}`}>
-                    <div className={`p-3.5 rounded-3xl shadow-sm ${isSiswa ? 'bg-primary text-white rounded-br-sm' : 'bg-white text-gray-800 rounded-bl-sm'}`}>
-                      <p className="text-[16px] leading-relaxed">{msg.content}</p>
-                    </div>
-                    <span className="text-[13px] font-semibold text-gray-400 px-1.5">
-                      {new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                    </span>
+          {messages.map((msg) => {
+            const isSiswa = msg.senderId === 1;
+            return (
+              <div key={msg.id} className={`flex items-end gap-2 max-w-[88%] ${isSiswa ? 'ml-auto justify-end mt-2' : 'mr-auto'}`}>
+                {!isSiswa && (
+                  <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-primary shrink-0 shadow-sm">
+                    <span className="material-symbols-outlined text-[18px]">school</span>
                   </div>
+                )}
+                <div className={`flex flex-col gap-1 ${isSiswa ? 'items-end' : 'items-start'}`}>
+                  <div className={`p-3.5 rounded-3xl shadow-sm ${isSiswa ? 'bg-primary text-white rounded-br-sm' : 'bg-white text-gray-800 rounded-bl-sm'}`}>
+                    <p className="text-[16px] leading-relaxed">{msg.content}</p>
+                  </div>
+                  <span className="text-[13px] font-semibold text-gray-400 px-1.5">
+                    {new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                  </span>
                 </div>
-              );
-            })
-          )}
+              </div>
+            );
+          })}
         </div>
       </main>
 
-      {/* Chat Input Dock */}
       <div className="fixed bottom-20 left-0 right-0 z-40 px-4 max-w-md mx-auto w-full">
         <form onSubmit={handleSend} className="bg-white/95 backdrop-blur-xl p-2 rounded-full shadow-lg flex items-center gap-1.5">
           <input 
-            type="text" 
-            value={message}
-            onChange={(e) => setMessage(e.target.value)}
+            type="text" value={message} onChange={(e) => setMessage(e.target.value)}
             placeholder="Tulis ceritamu di sini..." 
             className="flex-1 bg-gray-50 px-4 py-2.5 rounded-full text-gray-800 placeholder:text-gray-400 text-[16px] outline-none focus:bg-gray-100 transition-all"
           />
