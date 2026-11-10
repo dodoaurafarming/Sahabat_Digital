@@ -1,0 +1,36 @@
+@import url('https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@400;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200');
+@import "tailwindcss";
+
+@theme {
+  /* Font */
+  --font-sans: "Nunito Sans", system-ui, sans-serif;
+
+  /* Warna Stitch (Material Palette) */
+  --color-primary: #0058be;
+  --color-primary-dark: #1D4ED8;
+  --color-secondary: #4059aa;
+  --color-surface: #f8f9ff;
+  --color-surface-card: #FFFFFF;
+  --color-surface-container-low: #eef4ff;
+  --color-surface-container: #e6eefb;
+  --color-on-surface: #141c25;
+  --color-on-surface-variant: #424754;
+  --color-tertiary: #755700;
+  --color-tertiary-fixed: #ffdf9e;
+  --color-secondary-fixed: #dce1ff;
+  
+  /* Radius */
+  --radius-lg: 2rem; /* Sesuai desain Stitch */
+  --radius-xl: 3rem;
+}
+
+/* Utilitas Material Icons */
+@layer utilities {
+  .material-symbols-outlined {
+    font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+  }
+  .icon-filled {
+    font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+  }
+}
