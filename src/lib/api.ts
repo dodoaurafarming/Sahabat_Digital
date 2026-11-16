@@ -2,7 +2,7 @@ import axios from 'axios';
 
 export const api = axios.create({
   // GUNAKAN URL CLOUDFLARE TUNNEL ANDA
-  baseURL: 'https://transition-batteries-next-prisoners.trycloudflare.com/api', 
+  baseURL: 'https://hired-musicians-lafayette-wheat.trycloudflare.com', 
   headers: {
     'Content-Type': 'application/json',
   },
