@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { api, setAuthToken } from '../../lib/api';
 
 export default function LoginSiswa() {
   const navigate = useNavigate();
@@ -10,30 +11,40 @@ export default function LoginSiswa() {
   const [kelas, setKelas] = useState('');
   const [password, setPassword] = useState('');
 
-  const handleLogin = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!name || !kelas) {
-      alert("Nama dan Kelas wajib diisi!");
-      return;
-    }
+  const handleLogin = async (e: React.FormEvent) => {
+  e.preventDefault();
+  if (!name || !kelas) {
+    alert("Nama dan Kelas wajib diisi!");
+    return;
+  }
+  
+  setIsLoading(true);
+  
+  try {
+    // Tembak API Backend
+    const response = await api.post('/auth/login-siswa', {
+      name: name,
+      kelas: kelas
+    });
+
+    // Simpan token JWT
+    setAuthToken(response.data.token);
     
-    setIsLoading(true);
+    // Simpan data user di localStorage
+    localStorage.setItem('user_id', response.data.user.id);
+    localStorage.setItem('user_name', response.data.user.name);
+    localStorage.setItem('user_kelas', response.data.user.kelas);
     
-    // SIMULASI LOGIN (Tanpa Backend)
+    setIsSuccess(true);
+    
     setTimeout(() => {
-      setIsLoading(false);
-      setIsSuccess(true);
-      
-      // Simpan token dummy ke local storage
-      localStorage.setItem('token', 'dummy-token-siswa');
-      localStorage.setItem('user_name', name);
-      localStorage.setItem('user_kelas', kelas);
-      
-      setTimeout(() => {
-        navigate('/dashboard-siswa');
-      }, 1000);
-    }, 1500);
-  };
+      navigate('/dashboard-siswa');
+    }, 1000);
+  } catch (error: any) {
+    setIsLoading(false);
+    alert(error.response?.data?.message || 'Gagal terhubung ke server. Periksa koneksi backend.');
+  }
+};
 
   return (
     <div className="min-h-screen bg-surface-container-low flex flex-col">

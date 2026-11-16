@@ -1,37 +1,82 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react'; // <-- Tambahkan useEffect
 import { useNavigate } from 'react-router-dom';
 import BottomNav from '../../components/layout/BottomNav';
+import EmojiPicker from 'emoji-picker-react';
+import { api } from '../../lib/api';
 
 interface Message {
   id: number;
   senderId: number;
-  content: string;
+  content: string | null;
+  imageUrl?: string | null;
   createdAt: string;
 }
 
 export default function CurhatSiswa() {
   const navigate = useNavigate();
   const [message, setMessage] = useState('');
-  
-  // Data dummy percakapan awal
-  const [messages, setMessages] = useState<Message[]>([
-    { id: 1, senderId: 2, content: 'Halo Budi! Ada apa hari ini? Kalau ada teman yang mengejek atau berbuat jahat kepadamu, jangan takut cerita ke Ibu ya.', createdAt: new Date(Date.now() - 3600000).toISOString() },
-    { id: 2, senderId: 1, content: 'Halo Bu Rahma... Kemarin di grup WA kelas ada teman yang bikin stiker foto saya lalu diejek ramai-ramai. Saya sedih dan takut besok masuk sekolah 😢', createdAt: new Date(Date.now() - 1800000).toISOString() }
-  ]);
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false); // <-- State untuk emoji
+  const chatRoomId = 1; // Hardcode untuk demo
 
-  const handleSend = (e: React.FormEvent) => {
+  // Ambil riwayat chat
+  useEffect(() => {
+    const fetchMessages = async () => {
+      try {
+        const response = await api.get(`/chat/messages/${chatRoomId}`);
+        setMessages(response.data.data);
+      } catch (error) {
+        console.error("Gagal mengambil pesan:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchMessages();
+  }, []);
+
+  // Handler untuk memilih emoji
+  const onEmojiClick = (emojiObject: any) => {
+    setMessage((prev) => prev + emojiObject.emoji);
+  };
+
+  // Handler kirim pesan teks
+  const handleSend = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!message.trim()) return;
 
-    const newMessage: Message = {
-      id: Date.now(),
-      senderId: 1, // ID Siswa (Budi)
-      content: message,
-      createdAt: new Date().toISOString()
-    };
-
-    setMessages(prev => [...prev, newMessage]);
+    const textToSend = message;
     setMessage('');
+    setShowEmojiPicker(false); // Tutup picker setelah kirim
+
+    try {
+      const response = await api.post('/chat/message', {
+        chatRoomId,
+        content: textToSend
+      });
+      setMessages(prev => [...prev, response.data.data]);
+    } catch (error) {
+      alert('Gagal mengirim pesan. Pastikan backend menyala.');
+    }
+  };
+
+  // Handler upload gambar ke Cloudinary (via backend)
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const formData = new FormData();
+    formData.append('image', file);
+    formData.append('chatRoomId', chatRoomId.toString());
+
+    try {
+      const response = await api.post('/chat/message-image', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      setMessages(prev => [...prev, response.data.data]);
+    } catch (error) {
+      alert('Gagal mengunggah gambar.');
+    }
   };
 
   return (
@@ -82,36 +127,83 @@ export default function CurhatSiswa() {
             <span className="px-3.5 py-1 bg-gray-200/80 rounded-full text-[13px] font-bold text-gray-500 shadow-sm">Hari Ini</span>
           </div>
 
-          {messages.map((msg) => {
-            const isSiswa = msg.senderId === 1;
-            return (
-              <div key={msg.id} className={`flex items-end gap-2 max-w-[88%] ${isSiswa ? 'ml-auto justify-end mt-2' : 'mr-auto'}`}>
-                {!isSiswa && (
-                  <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-primary shrink-0 shadow-sm">
-                    <span className="material-symbols-outlined text-[18px]">school</span>
+          {isLoading ? (
+            <div className="text-center text-gray-500 py-4">Memuat pesan...</div>
+          ) : (
+            messages.map((msg) => {
+              const isSiswa = msg.senderId === 1; // Asumsi ID Siswa = 1
+              return (
+                <div key={msg.id} className={`flex items-end gap-2 max-w-[88%] ${isSiswa ? 'ml-auto justify-end mt-2' : 'mr-auto'}`}>
+                  {!isSiswa && (
+                    <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-primary shrink-0 shadow-sm">
+                      <span className="material-symbols-outlined text-[18px]">school</span>
+                    </div>
+                  )}
+                  <div className={`flex flex-col gap-1 ${isSiswa ? 'items-end' : 'items-start'}`}>
+                    
+                    {/* Bubble Chat */}
+                    <div className={`rounded-3xl shadow-sm overflow-hidden ${isSiswa ? 'bg-primary text-white rounded-br-sm' : 'bg-white text-gray-800 rounded-bl-sm'}`}>
+                      
+                      {/* Jika ada teks */}
+                      {msg.content && (
+                        <div className="p-3.5">
+                          <p className="text-[16px] leading-relaxed">{msg.content}</p>
+                        </div>
+                      )}
+
+                      {/* Jika ada gambar */}
+                      {msg.imageUrl && (
+                        <div className="p-2">
+                          <img src={msg.imageUrl} alt="Lampiran" className="max-w-[200px] rounded-2xl object-cover" />
+                        </div>
+                      )}
+
+                    </div>
+
+                    <span className="text-[13px] font-semibold text-gray-400 px-1.5">
+                      {new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    </span>
                   </div>
-                )}
-                <div className={`flex flex-col gap-1 ${isSiswa ? 'items-end' : 'items-start'}`}>
-                  <div className={`p-3.5 rounded-3xl shadow-sm ${isSiswa ? 'bg-primary text-white rounded-br-sm' : 'bg-white text-gray-800 rounded-bl-sm'}`}>
-                    <p className="text-[16px] leading-relaxed">{msg.content}</p>
-                  </div>
-                  <span className="text-[13px] font-semibold text-gray-400 px-1.5">
-                    {new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                  </span>
                 </div>
-              </div>
-            );
-          })}
+              );
+            })
+          )}
         </div>
       </main>
 
       <div className="fixed bottom-20 left-0 right-0 z-40 px-4 max-w-md mx-auto w-full">
-        <form onSubmit={handleSend} className="bg-white/95 backdrop-blur-xl p-2 rounded-full shadow-lg flex items-center gap-1.5">
+        {/* Tampilkan Emoji Picker di atas input */}
+        {showEmojiPicker && (
+          <div className="absolute bottom-16 right-4 z-50">
+            <EmojiPicker onEmojiClick={onEmojiClick} />
+          </div>
+        )}
+
+        <form onSubmit={handleSend} className="bg-white/95 backdrop-blur-xl p-2 rounded-full shadow-lg flex items-center gap-1.5 relative">
+          
+          {/* Tombol Lampiran Gambar */}
+          <label className="w-11 h-11 rounded-full flex items-center justify-center text-gray-500 hover:bg-gray-100 active:scale-90 transition-all shrink-0 cursor-pointer">
+            <span className="material-symbols-outlined text-[22px]">attach_file</span>
+            <input type="file" accept="image/*" className="hidden" onChange={handleImageUpload} />
+          </label>
+
+          {/* Tombol Emoji */}
+          <button 
+            type="button" 
+            onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+            className="w-11 h-11 rounded-full flex items-center justify-center text-gray-500 hover:bg-gray-100 active:scale-90 transition-all shrink-0"
+          >
+            <span className="material-symbols-outlined text-[22px]">mood</span>
+          </button>
+
           <input 
-            type="text" value={message} onChange={(e) => setMessage(e.target.value)}
+            type="text" 
+            value={message} 
+            onChange={(e) => setMessage(e.target.value)}
             placeholder="Tulis ceritamu di sini..." 
             className="flex-1 bg-gray-50 px-4 py-2.5 rounded-full text-gray-800 placeholder:text-gray-400 text-[16px] outline-none focus:bg-gray-100 transition-all"
           />
+          
           <button type="submit" className="w-11 h-11 rounded-full bg-primary text-white flex items-center justify-center shadow-[0_4px_0_#004395] active:translate-y-1 active:shadow-none transition-all shrink-0">
             <span className="material-symbols-outlined text-[20px] ml-0.5">send</span>
           </button>

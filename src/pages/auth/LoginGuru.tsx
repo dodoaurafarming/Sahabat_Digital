@@ -1,5 +1,6 @@
 import { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { api, setAuthToken } from '../../lib/api';
 
 export default function LoginGuru() {
   const navigate = useNavigate();
@@ -23,19 +24,33 @@ export default function LoginGuru() {
     }
   };
 
-  const handleLogin = () => {
-    if (isLoading) return;
-    setIsLoading(true);
+ const handleLogin = async () => {
+  if (isLoading) return;
+  setIsLoading(true);
 
-    // SIMULASI LOGIN GURU
-    setTimeout(() => {
-      setIsLoading(false);
-      localStorage.setItem('token', 'dummy-token-guru');
-      navigate('/dashboard-guru');
-    }, 1000);
-  };
+  const nip = pin.join(''); 
 
-  const isPinComplete = pin.every((digit) => digit !== '');
+  try {
+    const response = await api.post('/auth/login-guru', {
+      nip: nip,
+      password: 'passwordguru123' // Sesuaikan dengan password guru di database Anda
+    });
+
+    setAuthToken(response.data.token);
+    localStorage.setItem('user_id', response.data.user.id);
+    localStorage.setItem('user_name', response.data.user.name);
+    localStorage.setItem('user_role', response.data.user.role);
+    
+    navigate('/dashboard-guru');
+  } catch (error: any) {
+    setIsLoading(false);
+    alert(error.response?.data?.message || 'NIP tidak ditemukan atau salah.');
+    setPin(['', '', '', '', '', '']);
+    inputRefs.current[0]?.focus();
+  }
+};
+
+ const isPinComplete = pin.every((digit) => digit !== '');
 
   return (
     <div className="min-h-screen bg-surface-container-low flex flex-col">

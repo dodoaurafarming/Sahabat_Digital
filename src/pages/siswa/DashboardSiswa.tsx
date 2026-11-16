@@ -1,11 +1,49 @@
 import { useNavigate } from 'react-router-dom';
+import { useEffect, useState } from 'react';
 import BottomNav from '../../components/layout/BottomNav';
+import { api } from '../../lib/api'; // Import API kita
 
 export default function DashboardSiswa() {
   const navigate = useNavigate();
-  
-  // Ambil nama dari local storage (jika ada)
-  const userName = localStorage.getItem('user_name') || 'Siswa Hebat';
+  const [userName, setUserName] = useState('Siswa Hebat');
+  const [userKelas, setUserKelas] = useState('5A');
+  const [userXp, setUserXp] = useState(0);
+  const [userStreak, setUserStreak] = useState(0);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchUserData = async () => {
+      try {
+        // Kita bisa mengambil data user dari localStorage (yang disimpan saat login)
+        const storedId = localStorage.getItem('user_id');
+        const storedName = localStorage.getItem('user_name');
+        const storedKelas = localStorage.getItem('user_kelas');
+
+        if (storedName) setUserName(storedName);
+        if (storedKelas) setUserKelas(storedKelas);
+
+        // Untuk XP dan Streak, kita bisa mengambil data terbaru dari backend
+        // (Misalnya lewat endpoint /guru/students/:id atau endpoint khusus /auth/me)
+        // Karena endpoint khusus /auth/me belum ada, kita bisa sementara mengambil dari data progres
+        if (storedId) {
+          // Contoh memanggil API progres (jika ada) atau cukup gunakan nilai default dulu
+          // Di sini kita akan gunakan data dari localStorage sebagai fallback
+        }
+      } catch (error) {
+        console.error("Gagal memuat data dashboard", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchUserData();
+  }, []);
+
+  // Hitung persentase XP ke level berikutnya (contoh sederhana)
+  // Misal: Level naik setiap 100 XP
+  const currentLevel = Math.floor(userXp / 100) + 1;
+  const xpToNextLevel = 100 - (userXp % 100);
+  const progressPercentage = (userXp % 100);
 
   return (
     <div className="min-h-screen bg-surface-container-low flex flex-col pb-28">
@@ -21,7 +59,7 @@ export default function DashboardSiswa() {
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-1 bg-surface-container-low px-2.5 py-1 rounded-full">
               <span className="material-symbols-outlined text-yellow-500 text-[18px] icon-filled">stars</span>
-              <span className="font-bold text-[14px] text-gray-800">120</span>
+              <span className="font-bold text-[14px] text-gray-800">{userXp}</span>
             </div>
             <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center ring-2 ring-blue-200">
               <span className="material-symbols-outlined text-blue-500 text-[18px]">person</span>
@@ -47,7 +85,7 @@ export default function DashboardSiswa() {
             <div className="flex flex-col min-w-0">
               <div className="flex items-center gap-1.5 flex-wrap">
                 <span className="text-[20px] font-extrabold text-gray-800 truncate">Halo, {userName}!</span>
-                <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-blue-100 text-blue-800 text-[13px] font-bold">SD Bintang 01</span>
+                <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-blue-100 text-blue-800 text-[13px] font-bold">Kelas {userKelas}</span>
               </div>
               <p className="text-[16px] text-gray-500 truncate">Siap jadi pahlawan kebaikan hari ini? 🌟</p>
             </div>
@@ -67,15 +105,15 @@ export default function DashboardSiswa() {
                 <span className="material-symbols-outlined text-[20px] icon-filled">military_tech</span>
               </div>
               <div>
-                <span className="font-bold text-[14px] text-gray-800 block">Level 3 - Sahabat Teladan</span>
-                <span className="text-[13px] font-semibold text-gray-500">50 Poin lagi menuju Level 4</span>
+                <span className="font-bold text-[14px] text-gray-800 block">Level {currentLevel} - Sahabat Teladan</span>
+                <span className="text-[13px] font-semibold text-gray-500">{xpToNextLevel} Poin lagi menuju Level {currentLevel + 1}</span>
               </div>
             </div>
             <span className="inline-flex items-center px-2.5 py-1 rounded-full bg-yellow-100 text-yellow-900 font-bold text-[14px]">Hebat!</span>
           </div>
           
           <div className="w-full bg-gray-100 h-3.5 rounded-full overflow-hidden p-0.5">
-            <div className="bg-gradient-to-r from-blue-400 via-primary to-yellow-400 h-full rounded-full transition-all duration-700" style={{ width: '78%' }}></div>
+            <div className="bg-gradient-to-r from-blue-400 via-primary to-yellow-400 h-full rounded-full transition-all duration-700" style={{ width: `${progressPercentage}%` }}></div>
           </div>
 
           <div className="grid grid-cols-2 gap-2 pt-1">
@@ -85,7 +123,7 @@ export default function DashboardSiswa() {
               </div>
               <div className="flex flex-col leading-none">
                 <span className="text-[13px] font-semibold text-gray-500">Streak Aktif</span>
-                <span className="font-bold text-[14px] text-gray-800">5 Hari Beruntun!</span>
+                <span className="font-bold text-[14px] text-gray-800">{userStreak} Hari Beruntun!</span>
               </div>
             </div>
             <div className="flex items-center gap-2 bg-surface-container-low px-3 py-2 rounded-full">
@@ -94,7 +132,7 @@ export default function DashboardSiswa() {
               </div>
               <div className="flex flex-col leading-none">
                 <span className="text-[13px] font-semibold text-gray-500">Poin Terkumpul</span>
-                <span className="font-bold text-[14px] text-gray-800">450 Kebaikan</span>
+                <span className="font-bold text-[14px] text-gray-800">{userXp} Kebaikan</span>
               </div>
             </div>
           </div>

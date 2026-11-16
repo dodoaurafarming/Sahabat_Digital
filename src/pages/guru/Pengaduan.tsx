@@ -1,5 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import BottomNavGuru from '../../components/layout/BottomNavGuru';
+import { api } from '../../lib/api'; // <-- Import API
 
 // Tipe data untuk Pengaduan
 interface PengaduanItem {
@@ -12,22 +14,45 @@ interface PengaduanItem {
   status: 'unread' | 'resolved';
   priority: boolean;
   color: string;
+  chatRoomId?: number; // Tambahkan ID room untuk keperluan balas
 }
 
 export default function Pengaduan() {
+  const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
   const [activeFilter, setActiveFilter] = useState('all');
   const [selectedStudent, setSelectedStudent] = useState<PengaduanItem | null>(null);
   const [replyText, setReplyText] = useState('');
+  const [pengaduanData, setPengaduanData] = useState<PengaduanItem[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  // Data Dummy untuk Demo
-  const pengaduanData: PengaduanItem[] = [
-    { id: 1, name: 'Dimas Arya Pratama', initials: 'DA', kelas: '5B', time: '10:15 WIB', message: 'Bu Rahma, di grup game online ada yang sebar kata-kata kasar tentang aku dan ngancem nggak diajak main lagi...', status: 'unread', priority: true, color: 'bg-blue-100 text-blue-600' },
-    { id: 2, name: 'Siti Aisyah', initials: 'SA', kelas: '4A', time: '08:40 WIB', message: 'Ibu guru, fotoku diedit jadi jelek terus di-share di status WA sama teman-teman. Aku malu masuk sekolah besok...', status: 'unread', priority: true, color: 'bg-green-100 text-green-600' },
-    { id: 3, name: 'Rizky Ramadhan', initials: 'RR', kelas: '6C', time: 'Kemarin', message: 'Tolong Bu, akun belajar saya dilaporkan ramai-ramai tanpa alasan sampai terkunci, padahal ada tugas...', status: 'unread', priority: false, color: 'bg-yellow-100 text-yellow-600' },
-    { id: 4, name: 'Nabila Putri', initials: 'NP', kelas: '5B', time: '12 Feb', message: 'Terima kasih banyak Bu Rahma, sekarang mereka sudah minta maaf dan keluarin postingan itu...', status: 'resolved', priority: false, color: 'bg-purple-100 text-purple-600' },
-    { id: 5, name: 'Kevin Maulana', initials: 'KM', kelas: '4B', time: '11 Feb', message: 'Baik bu, nanti siang jam istirahat saya temui Ibu di ruang konseling seperti yang dijadwalkan...', status: 'resolved', priority: false, color: 'bg-gray-200 text-gray-600' }
-  ];
+  // Ambil data siswa dari backend
+  useEffect(() => {
+    const fetchStudents = async () => {
+      try {
+        const response = await api.get('/guru/students');
+        // Transformasi data dari API ke format UI
+        const students = response.data.data.map((s: any, index: number) => ({
+          id: s.id,
+          name: s.name,
+          initials: s.name.substring(0, 2).toUpperCase(),
+          kelas: s.kelas || '5A',
+          time: 'Baru saja',
+          message: `Siswa ini memiliki ${s.xp} XP dan telah menyelesaikan ${s.progress?.length || 0} modul.`,
+          status: s.xp > 100 ? 'resolved' : 'unread', // Contoh logika status
+          priority: s.xp < 50,
+          color: index % 2 === 0 ? 'bg-blue-100 text-blue-600' : 'bg-green-100 text-green-600',
+          chatRoomId: 1 // Asumsi room ID 1 untuk demo
+        }));
+        setPengaduanData(students);
+      } catch (error) {
+        console.error("Gagal mengambil data siswa:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchStudents();
+  }, []);
 
   const filteredData = pengaduanData.filter(item => {
     const matchSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase()) || item.kelas.toLowerCase().includes(searchQuery.toLowerCase());
@@ -35,12 +60,23 @@ export default function Pengaduan() {
     return matchSearch && matchFilter;
   });
 
-  const handleSendReply = (e: React.FormEvent) => {
+  // Kirim balasan ke API
+  const handleSendReply = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!replyText.trim() || !selectedStudent) return;
-    alert(`Balasan terkirim ke ${selectedStudent.name}: "${replyText}"`);
-    setReplyText('');
-    // Di aplikasi nyata, ini akan memanggil API POST /api/chat/message
+    if (!replyText.trim() || !selectedStudent?.chatRoomId) return;
+
+    try {
+      // Kirim ke API Chat
+      await api.post('/chat/message', {
+        chatRoomId: selectedStudent.chatRoomId,
+        content: replyText
+      });
+
+      alert(`Balasan terkirim ke ${selectedStudent.name}: "${replyText}"`);
+      setReplyText('');
+    } catch (error) {
+      alert('Gagal mengirim balasan. Pastikan backend menyala.');
+    }
   };
 
   return (
@@ -80,7 +116,7 @@ export default function Pengaduan() {
             </div>
             <div className="flex items-center bg-red-50 text-red-600 px-2 py-1 rounded-full gap-1">
               <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span>
-              <span className="text-[13px] font-bold">3 Perlu Solusi</span>
+              <span className="text-[13px] font-bold">{pengaduanData.filter(d => d.status === 'unread').length} Perlu Solusi</span>
             </div>
           </div>
 
@@ -97,20 +133,24 @@ export default function Pengaduan() {
 
           <div className="flex items-center gap-2 p-1 bg-gray-50 rounded-full overflow-x-auto no-scrollbar">
             <button onClick={() => setActiveFilter('all')} className={`flex-1 min-h-[38px] px-3.5 py-1.5 rounded-full text-[14px] font-bold transition-all ${activeFilter === 'all' ? 'bg-primary text-white shadow-sm' : 'text-gray-500 hover:text-primary'}`}>
-              Semua <span className="bg-white/25 px-1.5 py-0.5 rounded-full text-[13px]">5</span>
+              Semua <span className="bg-white/25 px-1.5 py-0.5 rounded-full text-[13px]">{pengaduanData.length}</span>
             </button>
             <button onClick={() => setActiveFilter('unread')} className={`flex-1 min-h-[38px] px-3.5 py-1.5 rounded-full text-[14px] font-bold transition-all ${activeFilter === 'unread' ? 'bg-primary text-white shadow-sm' : 'text-gray-500 hover:text-primary'}`}>
-              Belum Dibalas <span className="bg-red-400 text-white px-1.5 py-0.5 rounded-full text-[13px]">3</span>
+              Belum Dibalas <span className="bg-red-400 text-white px-1.5 py-0.5 rounded-full text-[13px]">{pengaduanData.filter(d => d.status === 'unread').length}</span>
             </button>
             <button onClick={() => setActiveFilter('resolved')} className={`flex-1 min-h-[38px] px-3.5 py-1.5 rounded-full text-[14px] font-bold transition-all ${activeFilter === 'resolved' ? 'bg-primary text-white shadow-sm' : 'text-gray-500 hover:text-primary'}`}>
-              Selesai <span className="bg-gray-200 text-gray-600 px-1.5 py-0.5 rounded-full text-[13px]">2</span>
+              Selesai <span className="bg-gray-200 text-gray-600 px-1.5 py-0.5 rounded-full text-[13px]">{pengaduanData.filter(d => d.status === 'resolved').length}</span>
             </button>
           </div>
         </div>
 
         {/* List Pengaduan */}
         <div className="flex flex-col gap-3">
-          {filteredData.length === 0 && (
+          {isLoading && (
+            <div className="text-center text-gray-500 py-8">Memuat data siswa...</div>
+          )}
+
+          {!isLoading && filteredData.length === 0 && (
             <div className="bg-white rounded-2xl p-8 text-center flex flex-col items-center justify-center shadow-sm">
               <span className="material-symbols-outlined text-4xl text-gray-300 mb-2">search_off</span>
               <h4 className="text-[18px] font-bold text-gray-800">Tidak Menemukan Siswa</h4>
@@ -118,7 +158,7 @@ export default function Pengaduan() {
             </div>
           )}
 
-          {filteredData.map((item) => (
+          {!isLoading && filteredData.map((item) => (
             <button key={item.id} onClick={() => setSelectedStudent(item)} className={`w-full text-left bg-white hover:bg-gray-50 p-4 rounded-2xl shadow-sm active:scale-[0.99] transition-all flex items-start gap-3 border-l-4 ${item.priority ? 'border-l-red-400' : item.status === 'unread' ? 'border-l-red-300' : 'border-l-transparent'}`}>
               <div className="relative shrink-0">
                 <div className={`w-12 h-12 rounded-full flex items-center justify-center font-extrabold text-[18px] ${item.color}`}>
@@ -202,7 +242,7 @@ export default function Pengaduan() {
             {/* Modal Chat Area */}
             <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-3 bg-gray-50/50">
               <div className="flex justify-center my-1">
-                <span className="bg-gray-200 text-gray-600 text-[13px] font-semibold px-3 py-1 rounded-full">Hari ini, {selectedStudent.time}</span>
+                <span className="bg-gray-200 text-gray-600 text-[13px] font-semibold px-3 py-1 rounded-full">Hari ini</span>
               </div>
               
               {/* Pesan Siswa */}
@@ -210,18 +250,7 @@ export default function Pengaduan() {
                 <div className="bg-white text-gray-800 p-4 rounded-2xl rounded-tl-sm shadow-sm">
                   <p className="text-[16px] leading-relaxed">{selectedStudent.message}</p>
                 </div>
-                <span className="text-[13px] font-semibold text-gray-400 mt-1 pl-1">{selectedStudent.time} • {selectedStudent.name.split(' ')[0]}</span>
-              </div>
-
-              {/* Balasan Guru (Contoh) */}
-              <div className="flex flex-col items-end max-w-[85%] self-end">
-                <div className="bg-primary text-white p-4 rounded-2xl rounded-tr-sm shadow-md">
-                  <p className="text-[16px] leading-relaxed">Halo {selectedStudent.name.split(' ')[0]}, terima kasih banyak ya sudah berani curhat ke Ibu. Kamu tidak salah, dan perlakuan teman-temanmu itu sama sekali tidak dibenarkan. Kamu sangat aman bersama Ibu.</p>
-                </div>
-                <div className="flex items-center gap-1 mt-1 pr-1 text-gray-400">
-                  <span className="text-[13px] font-semibold">10:20 WIB</span>
-                  <span className="material-symbols-outlined text-[14px] text-primary icon-filled">done_all</span>
-                </div>
+                <span className="text-[13px] font-semibold text-gray-400 mt-1 pl-1">{selectedStudent.name.split(' ')[0]}</span>
               </div>
             </div>
 
