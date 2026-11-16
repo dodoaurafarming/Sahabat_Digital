@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import BottomNav from '../../components/layout/BottomNav';
-import { api } from '../../lib/api'; // Import API kita
+import { api } from '../../lib/api'; // <-- Import API digunakan
 
 export default function DashboardSiswa() {
   const navigate = useNavigate();
@@ -9,28 +9,33 @@ export default function DashboardSiswa() {
   const [userKelas, setUserKelas] = useState('5A');
   const [userXp, setUserXp] = useState(0);
   const [userStreak, setUserStreak] = useState(0);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(true); // <-- Digunakan untuk loading state
 
   useEffect(() => {
     const fetchUserData = async () => {
       try {
-        // Kita bisa mengambil data user dari localStorage (yang disimpan saat login)
-        const storedId = localStorage.getItem('user_id');
+        // Ambil data terbaru dari backend
+        const response = await api.get('/auth/me');
+        const user = response.data.data;
+
+        setUserName(user.name);
+        setUserKelas(user.kelas || '5A');
+        setUserXp(user.xp);
+        setUserStreak(user.streak);
+
+        // Simpan juga ke localStorage sebagai cadangan
+        localStorage.setItem('user_name', user.name);
+        localStorage.setItem('user_kelas', user.kelas || '5A');
+        localStorage.setItem('user_xp', user.xp.toString());
+        localStorage.setItem('user_streak', user.streak.toString());
+
+      } catch (error) {
+        console.error("Gagal mengambil data user:", error);
+        // Fallback ke localStorage jika API gagal
         const storedName = localStorage.getItem('user_name');
         const storedKelas = localStorage.getItem('user_kelas');
-
         if (storedName) setUserName(storedName);
         if (storedKelas) setUserKelas(storedKelas);
-
-        // Untuk XP dan Streak, kita bisa mengambil data terbaru dari backend
-        // (Misalnya lewat endpoint /guru/students/:id atau endpoint khusus /auth/me)
-        // Karena endpoint khusus /auth/me belum ada, kita bisa sementara mengambil dari data progres
-        if (storedId) {
-          // Contoh memanggil API progres (jika ada) atau cukup gunakan nilai default dulu
-          // Di sini kita akan gunakan data dari localStorage sebagai fallback
-        }
-      } catch (error) {
-        console.error("Gagal memuat data dashboard", error);
       } finally {
         setIsLoading(false);
       }
@@ -39,11 +44,22 @@ export default function DashboardSiswa() {
     fetchUserData();
   }, []);
 
-  // Hitung persentase XP ke level berikutnya (contoh sederhana)
-  // Misal: Level naik setiap 100 XP
+  // Hitung level dan progress
   const currentLevel = Math.floor(userXp / 100) + 1;
   const xpToNextLevel = 100 - (userXp % 100);
   const progressPercentage = (userXp % 100);
+
+  // Tampilkan loading screen jika data belum siap
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-surface-container-low">
+        <div className="flex flex-col items-center gap-2">
+          <span className="material-symbols-outlined animate-spin text-4xl text-primary">progress_activity</span>
+          <p className="text-gray-500 font-bold">Memuat data...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-surface-container-low flex flex-col pb-28">
