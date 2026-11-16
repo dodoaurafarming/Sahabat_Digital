@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+// import { useNavigate } from 'react-router-dom';
 import BottomNavGuru from '../../components/layout/BottomNavGuru';
 import { api } from '../../lib/api'; // <-- Import API
 
@@ -18,7 +18,7 @@ interface PengaduanItem {
 }
 
 export default function Pengaduan() {
-  const navigate = useNavigate();
+  // const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
   const [activeFilter, setActiveFilter] = useState('all');
   const [selectedStudent, setSelectedStudent] = useState<PengaduanItem | null>(null);
